@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Evaluated Guardrail Agent with Continuous Integration
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.12
+    Handler: app.lambda_handler
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+
+Resources:
+  OrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/orchestrator/
+      Description: Main agent orchestrator
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        # Add least-privilege policies for other services as needed
+
+  InputGuardrailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/guardrails/
+      Handler: input_guardrail.lambda_handler
+      Description: Input validation guardrail
+
+  OutputValidationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/guardrails/
+      Handler: output_guardrail.lambda_handler
+      Description: Output validation guardrail
+
+Outputs:
+  OrchestratorFunctionArn:
+    Description: Orchestrator Lambda Function ARN
+    Value: !GetAtt OrchestratorFunction.Arn
